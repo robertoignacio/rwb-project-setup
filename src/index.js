@@ -10,7 +10,7 @@ import "./styles/main.scss";
 
 
 // grab image from ./src/images/
-import imageWL from "./src/images/ye.jpg";
+import imageWL from "./images/ye.jpg";
 // grab id from the template html: <img id="webpackLoadsImg" />
 const webpackLoadsImg = document.getElementById("webpackLoadsImg");
 // add a source to webpackLoadsImg, as the .src method
