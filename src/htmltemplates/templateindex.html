@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <% for (const tag of htmlWebpackPlugin.tags.headTags) { %><%= tag %>
+        <% } %>
+        <title><%= htmlWebpackPlugin.options.title %></title>
+    </head>
+    <body>
+        <main>
+            <div>
+                <h1>webpack is operational</h1>
+                <img id="webpackLoadsImg" />
+            </div>
+            
+            <div id="root-React17"></div>
+            <div id="root-React18"></div>
+        </main>
+    </body>
+</html>

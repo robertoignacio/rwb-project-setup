@@ -1,0 +1,871 @@
+--- Project Setup Notes Log ---
+
+Aims to be a project setup for a 
+React (> 17) + Webpack + Babel ( + Sass/PostCSS)
+instead of using the create-react-app or vite
+
+This JavaScript build toolchain:
+    Package manager: npm
+    Module bundler: Webpack
+    Compiler: Babel
+
+To use this:
+    1. clone the repo
+    2. in terminal, go to that directory
+    3. $ npm init (to create the node_modules folder)
+    4. $ npm install (will grab dependencies from package.json and download all required)
+    5. at webpack.config.js look for buildMod variable, and set it up to "development" if you want to dev the app, or to "production" if you want webpack to build the css files
+    6. $ npm run build
+    7. $ npm run dev (will start the live server of Webpack, at localhost:8080)
+
+
+-------------------------------------------------------
+01. Create the remote repo at GitHub
+
+    Requires having installed github cli on the system.
+
+    A GitHub workstyle starts with the creation of the remote repo,
+    then cloning it to local, working on it and making commits for exact feature upload upstream.
+
+    At where you want to clone the remote repo:
+    (being already with gh auth login (will be persistent, beware))
+
+        $ gh repo create
+
+    Follow the instructions.
+    When asked if you want to clone locally the remote repo, write "Y" (yes)
+
+
+-------------------------------------------------------
+02. Move to the cloned remote repo, verify if git is tracking
+
+        $ cd <cloned-repo>
+
+    Verify the git status
+
+        $ git status
+
+    It will be already initialized from GitHub.
+
+    Verify what is the url of the remote repo:
+
+        $ git remote -v
+
+    Should be all ok.
+
+
+-------------------------------------------------------
+03. Verify that Node is installed or in use
+
+    At the root of the project:
+
+        $ node -v
+
+    If it shows the version, it is installed.
+    With certain WSL2 it gets de-referenced, while still installed.
+    To list all Node versions in existance and not only those installed, use Node Version Manager:
+    (Installed NVM from https://github.com/nvm-sh/nvm)
+
+        $ nvm ls-remote
+
+    To list all installed Node versions, use:
+
+        $ nvm ls
+
+    To list the help:
+
+        $ nvm --help
+
+    To install a specific Node version, use:
+    (node installs are global)
+
+        $ nvm install node
+        (Installs the latest available version)
+
+        nvm install --lts
+        (Install the latest LTS version)
+
+        $ nvm install <version number.mayor.minor>
+        (Install a specific version number, example: 8.0.0)
+    
+    To use a specific installed Node version, use:
+
+        $ nvm use node
+        (Use the latest version)
+
+        nvm use --lts
+        (Use the latest LTS version)
+
+        $ nvm use <version number.mayor.minor>
+        (Use that specific release)
+
+        $ nvm use <version number.mayor>
+        (Use the latest available number.mayor.x release, example: 8.0.x)
+    
+
+    This project:
+        $ nvm use 18.7
+
+    Then:
+        $ node -v
+    
+    Should show the Node version in use.
+
+
+-------------------------------------------------------
+04. Initialize npm
+
+    At the root of the project:
+
+        $ npm init
+    
+    Follow the prompts.
+
+        entry point: index.js
+        git repository will be pre defined (because its a gh repo create, then cloned)
+
+    This creates:
+        package.json
+    
+    Because there are no dependencies yet there is no /node_modules/ dir
+
+
+-------------------------------------------------------
+05. Create a (starting) directory structure
+                
+    First:
+    At the root directory of the project:
+
+        $ mkdir src
+        (create a ./src dir)
+
+        $ touch .babelrc.json
+        (create a Babel configuration file)
+
+        $ touch webpack.config.js
+        (create a Webpack configuration file, that exports the config object)
+
+        $ touch .gitignore
+        $ echo "/node_modules/" >> .gitignore
+        $ echo "/dist" >> .gitignore
+        (create a ignore file for git, with appended (>>) ignored directories: /node_modules/ and /dist (built code dir))
+
+    
+    Second:
+    At ./src :
+
+        $ mkdir styles
+        (create a ./src/styles dir)
+
+        $ cd src
+        $ touch index.js
+        (create a file: index.js (the entry point file at package.json))
+
+        $ touch App.js
+        (create a file: App.js (to be imported into index.js))
+
+        $ mkdir htmltemplates
+        $ cd htmltemplates
+        $ touch templateindex.html
+        (create a file: templateindex.html)
+
+        $ cd ..
+        (go back to root dir)
+    
+
+    Third:
+    At ./src/styles :
+
+        $ cd str/styles
+        $ touch main.scss
+        (create a file: main.scss)
+
+        $ touch _global.scss
+        (create a file: _global.scss ( the leading "_" means is a partial for sass))
+
+        $ touch _variables.scss
+        (create a file: _variables.scss)
+
+        $ cd ..
+        (go back to root dir)
+
+
+-------------------------------------------------------
+06. Install project dependencies: react + react-dom
+
+    At the root of the project:
+
+    Install React library and React (virtual) DOM renderer:
+        $ npm install react react-dom
+
+
+    To be configured:
+        You include these at the index.js and all imported by it that deal with React
+        (not at the webpack.config.js !)
+    
+
+-------------------------------------------------------
+07. Install dev dependencies: webpack + webpack-cli
+
+    Install Webpack (engine):
+        $ npm install --save-dev webpack
+
+    Install Webpack cli:
+        $ npm install --save-dev webpack-cli
+
+    
+    To be configured:
+        webpack will be configured with webpack.config.json
+
+
+-------------------------------------------------------
+08. Install dev dependencies: babel (core) + presets (ES2015 preset + React JSX preset) + Babel loader
+
+    At the root of the project:
+
+    Install Babel core transpiler:
+        $ npm install --save-dev @babel/core
+    
+    Install Babel preset for ES2015+ traspiling:
+        $ npm install --save-dev @babel/preset-env
+    
+    Install Babel preset for React for transpiling the JSX:
+        $ npm install --save-dev @babel/preset-react
+    
+    Install Babel loader for Webpack:
+        $ npm install --save-dev babel-loader
+    
+
+    To be configured:
+        babel-loader will be configured at webpack.config.json, at module: { rules: [] }
+
+        @babel/preset-env will be configured at .babelrc.json
+        @babel/preset-react will be configured at .babelrc.json        
+
+
+-------------------------------------------------------
+09. Install dev dependencies: html-webpack-plugin
+
+    First:
+    At the root directory of the project:
+
+        $ npm install --save-dev html-webpack-plugin
+    
+
+    Second:
+    At ./src/templateindex.html
+
+        <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <title><%= htmlWebpackPlugin.options.title %></title>
+            </head>
+            <body>
+                <main>
+                    <h1>webpack is operational</h1>
+                    <div id="root"></div>
+                </main>
+            </body>
+        </html>
+
+    
+    To be configured:
+        html-webpack-plugin will be configured with webpack.config.json, at plugins: []
+
+
+-------------------------------------------------------
+10. Install Webpack Live Server: webpack-dev-server
+
+    At the root directory of the project:
+
+        $ npm install --save-dev webpack-dev-server
+
+    
+    To be configured:
+        webpack-dev-server will be configured with webpack.config.json, at devServer: {}
+
+
+-------------------------------------------------------
+11. Configure webpack.config.js
+
+    Use this initially.
+    After doing this step configure .babelrc.json, then create a build script and a devServer start script at package.json
+
+    Configure: 
+        mode: --> has to be "development" or "production"
+
+        entry: --> define path(s) and options
+
+        output: --> define path(s) and options
+
+        module: --> define the rules for babel-loader
+
+        plugins: --> configure plugin options
+
+        devServer: --> configure the webpack-dev-server
+
+        target: --> define the build target from the available
+
+
+    It will be this object (initially):
+
+    module.exports = {
+        mode: "development",
+        entry: { /* path and options */ },
+        output: { /* path and options */ },
+        module: { rules: [ { /* test, exclude, use options */ }, ], },
+        plugins: [ new HtmlWebpackPlugin({ /* plugin options */ }), ],
+        devServer: { /* options */ },
+        target: "web"
+    }
+
+
+    First, 
+    at the top of webpack.config.js
+    import modules
+
+    // enable the Node´s full path lookup at path.resolve
+    const path = require("path");
+
+    // refer the webpack module (for tinkering reasons)
+    const { web, webpack } = require("webpack");
+
+    // import html-webpack-plugin module
+    const HtmlWebpackPlugin = require('html-webpack-plugin');
+
+
+    Second:
+    at "module.exports = {} "
+    ---------------------------------
+
+        module.exports = {
+            // tell webpack to build in development or production mode
+            mode: "development",
+
+            entry: {
+                // entry path, can be several (if several is better as a loop)
+                bundle: path.resolve(__dirname, "src/index.js"),
+            },
+
+            output: {
+                // output to ./dist
+                path: path.resolve(__dirname, "dist"),
+                // [name] in this case is "bundle", can be anything at entry: { name: ... }
+                filename: "[name].js",
+                // option for enabling cache for builds
+                //filename: "[name][contenthash].js",
+                // please remove hashed cache files from both hot module reload and builds
+                clean: true,
+            },
+
+            module: {
+                // rules array with objects { }, { }, { }
+                rules: [
+                    {
+                        // regex to grab all *.js ending in .js
+                        // could also be test: /\.(js|mjs|jsx|ts|tsx)$/,
+                        test: /\.(js|jsx)$/,
+                        exclude: /node_modules/,
+                        use: {
+                            // this will ref .babelrc unless more settings
+                            // put the presets in the .babelrc file or here
+                            loader: "babel-loader"
+                        }
+                    },
+                ],
+            },
+            // plugins array
+            plugins: [
+                // configure HtmlWebpackPlugin
+                new HtmlWebpackPlugin({
+                    title: "project name",
+                    filename: "index.html",
+                    // load a custom template
+                    template: "src/htmltemplates/templateindex.html",
+                    favicon: "src/favicon/icon.png"
+                }),
+            ],
+
+            devServer: {
+                static: {
+                    directory: path.resolve(__dirname, "dist")
+                },
+                port: 8080,
+                hot: true,
+                compress: true,
+                historyApiFallback: true,
+                allowedHosts: ["localhost"],
+            },
+
+            target: "web"
+        }
+
+
+    ------------------------------------------
+    Notes about entry:
+    To enable multiple html file creation:
+
+    const entry = {
+        entry1: path.resolve(__dirname, "path/entry1.js"),
+        entry2: path.resolve(__dirname, "path/entry2.js")
+    }
+
+
+    Notes about HtmlWebpackPlugin
+    To generate more than one HTML file, declare the plugin more than once in your plugins array
+
+        plugins: [
+            new HtmlWebpackPlugin({
+                filename: "test.html",
+                template: "src/templates/test.html",
+                //favicon: "src/favicon.gif"
+            }),
+            new HtmlWebpackPlugin({
+                filename: "other.html",
+                template: "src/templates/other.html"
+            })
+        ]
+
+
+    Notes about favicon:
+    This will transfer the icon to your build folder and include it in your tag like this <link rel="icon" href="icon.png">
+
+            new HtmlWebpackPlugin({
+                favicon: "src/favicon/icon.png"
+            })
+
+
+-------------------------------------------------------
+12. Configure .babelrc.json
+
+    Add this to it:
+
+    {
+        "presets": [
+            "@babel/preset-env", 
+            ["@babel/preset-react", {
+                "runtime": "automatic"
+            }]
+        ]
+    }
+
+
+    Runtime "automatic" means that it is enabled to accept files besides React JSX (its a feature)
+
+
+-------------------------------------------------------
+13. Create a build script at package.json
+
+        "scripts": {
+            "build": "webpack"
+        },
+
+    Usage:
+    at the root dir of the project, run
+
+        $ npm run build
+
+
+-------------------------------------------------------
+14. Create a devServer start script at package.json
+
+        "scripts": {
+            "build": "webpack",
+            "dev": "webpack serve"
+        },
+
+    Usage:
+    at the root dir of the project, run
+
+        $ npm run dev
+
+
+-------------------------------------------------------
+15. Verify everything is working as expected.
+
+    At the root dir of the project:
+
+        $ npm run build
+        Should create a ./dist directory with both index.html and bundle.js
+
+        Then
+        $ npm run dev
+        Should start a dev server at localhost:8080 with the index.html defined contents
+        To exit the devServer loop, do a Ctrl+C (or Cmd+C)
+    
+
+    Delete the ./dist directory
+
+
+-------------------------------------------------------
+16. Set up HtmlWebpackPlugin head & meta tags (no schema yet)
+
+    HtmlWebpackPlugin can grab key: values from the meta: {} defined at webpack.config.js
+
+    First,
+    add this at the template html:
+
+    <head>
+        <% for (const tag of htmlWebpackPlugin.tags.headTags) { %><%= tag %>
+        <% } %>
+        <title><%= htmlWebpackPlugin.options.title %></title>
+    </head>
+
+    Note:
+    There is no need to add a <link> for the css because webpack handles it
+
+    Note:
+    What are those <% tags?
+    <% %>  An embedded code block is server code that executes during the page's render phase. 
+    <%= %> most useful for displaying single pieces of information.
+
+
+    Second,
+    at webpack.config.js, at the plugin: []
+
+    Tell webpack to not inject the meta tags from the webpack.config.js 
+
+    plugins: [
+        new HtmlWebpackPlugin({
+            // tell webpack to not inject the meta tags from the webpack.config.js
+            inject: false,
+            // do not collapse lines
+            minify: { 
+                collapseWhitespace: false,
+                removeComments: true,
+            },
+            meta: {
+                //"name": "content" ---> <meta name="name" content="content">
+                "viewport": "width=device-width, initial-scale=1, shrink-to-fit=no",
+                "description": "A description of the page",
+                "robots": "index, follow",
+                "googlebot": "index, follow",
+                "google": "nositelinkssearchbox",
+                "googlebot-news": "noindex",
+                "robots": "max-snippet:-1",
+                "geo.region": "CL",
+            },
+            title: "project name",
+            filename: "index.html",
+            template: "src/html-templates/index-template.html",
+            //favicon: "src/favicon/icon.png"
+        }),
+    ]
+
+
+    Add this when possible at Google Search Console
+        "google-site-verification": "verification_token",
+    
+    Add this when possible at Bing Webmaster Center
+     "msvalidate.01": "verification_token",
+
+    Add this one when you have the ssl cert installed
+    Place as early in the <head> as possible, as the tag only applies to resources that are declared after it.
+        "Content-Security-Policy": { "http-equiv": "Content-Security-Policy", "content": "default-src https:" }, 
+
+
+-------------------------------------------------------
+17. Enable the Webpack Image loader
+
+    Webpack 5 comes with an asset loader (you dont need to install anything extra).
+    Just enable it on the webpack.config.js
+
+    First:
+    at /src/ directory create a directory called "images"
+
+        $ cd src
+        $ mkdir images
+    
+
+    Second:
+    at webpack.config.js, at output: {}
+    add this to tell webpack to not rename the output assets 
+
+        assetModuleFilename: "images/[name][ext]",
+
+    Will become:
+
+    output: {
+        path: path.resolve(__dirname, "dist"),
+        filename: "[name].js",
+        assetModuleFilename: "images/[name][ext]",
+        //filename: "[name][contenthash].js",
+        clean: true,
+    },
+
+
+    Third,
+    at webpack.config.js, at module: { rules: [ ]}
+
+    module: {
+        rules: [
+            { /* previous rules */ 
+            },
+            {
+                // grab all files with these extensions, case insensitive
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                // do not load urls from these assets
+                dependency: { not: ['url'] },
+                // type
+                type: "asset/resource"
+            }
+        ]
+    },
+
+
+    Fourth:
+    Add an image file at ./src/images/ to verify the build works
+
+    While you are at it, add a file to the favicon path,
+    also uncomment the //favicon: "src/favicon/icon.png"
+
+
+-------------------------------------------------------
+18. Install dev dependencies: sass + loaders (style-loader, css-loader, sass-loader) + mini-css-extract-plugin
+
+    Enable to write sass or scss files and convert them to css
+
+    First
+    At the project´s directory:
+
+    Install Sass:
+        $ npm install --save-dev sass
+    
+    And these loaders (to load the files to webpack)
+        $ npm install --save-dev style-loader
+        $ npm install --save-dev css-loader
+        $ npm install --save-dev sass-loader
+
+    (Or as: npm i -D sass style-loader css-loader sass-loader )
+
+        The loader flow works from right to left:
+        style-loader <--- css-loader <--- sass-loader
+
+        sass-loader loads the sass|scss files.
+        css-loader loads the css files.
+        style-loader injects the css into the javascript files using the styles. 
+        Note that a webpack build with style-loader will not create any css files.
+
+        If you want to create separate css files, 
+        you can install the mini-css-extract-plugin
+
+
+    Install mini-css-extract-plugin
+
+        $ npm install --save-dev mini-css-extract-plugin
+    
+
+    To be configured at webpack.config.js
+        MiniCssExtractPlugin
+        style-loader
+        sass-loader
+        css-loader
+
+
+-------------------------------------------------------
+19. Configure sass + loaders for a Conditional build for "development" or "production"
+
+    Configure:
+        MiniCssExtractPlugin
+        style-loader
+        sass-loader
+        css-loader
+
+    When to use each?
+        Do not use style-loader and mini-css-extract-plugin together.
+        It's recommended to combine mini-css-extract-plugin with the css-loader.
+    
+
+    For production mode builds:
+        It is recommended to extract the CSS from your bundle,
+        being able to use parallel load CSS/JS resources later on.
+        This can be achieved by using the mini-css-extract-plugin,
+        (MiniCssExtractPlugin.loader) because it creates separate css files.
+        This will build code that runs faster.
+        Also, can be used when you need to see the css output, css injected prefixes, etc.
+    
+    For development mode builds (including webpack-dev-server):
+        Use style-loader, because it injects CSS into the DOM and works faster.
+        The style-loader will inject the css to the JavaScript files (great for critical css globals).
+        This will enable to build a lot more faster when using the Webpack Dev Server.
+    
+
+    Proposed flow: "sass-loader" --> "css-loader" --> either {if mode: "development" use style-loader, if mode: "production" use MiniCssExtractPlugin.loader}
+
+
+    Add the loaders and the plugin to your webpack.config.js
+
+    // import mini-css-extract-plugin
+    const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+    // change buildMode to the type of build, manually
+    // set mode between "development" | "production" | "none"
+    const buildMode = "development";
+
+
+    // module exports a configuration object
+    module.exports = {
+        mode: buildMode,
+        entry: {
+            //...
+        },
+        output: {
+            //...
+        },
+        module: {
+            rules: [
+                {
+                    //... 
+                },
+                {
+                    // regex to grab all files ending with sass, scss and css
+                    test: /\.(sa|sc|c)ss$/,
+                    use: [
+                        // if true use "style-loader", if false use "MiniCssExtractPlugin.loader"
+                        buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
+                        "css-loader",
+                        "sass-loader",
+                    ],
+                },
+            ],
+        },
+        plugins: [
+            // ...
+        ].concat(buildMode !== "production" ? [] : [new MiniCssExtractPlugin()]),
+    }
+
+    -----------------------
+
+    Usage:
+        1. At webpack.config.js manually change buildMode to "development" or "production"
+        2. $ npm run build
+        3. Prefer buildMode: "development" when working with the devServer, but use "production" if you want to see the css files.
+
+
+-------------------------------------------------------
+20. Verify the ongoing work loads the css on "production" mode injecting React to index.html
+
+    1. At ./src/styles/main.scss
+    add:
+
+    @use "global";
+    (Note it is imported using @use, without the "_" or the file extension)
+
+
+    2. At ./src/styles/_global.scss
+    add:
+
+        @use "variables";
+
+        body {
+        background-color: variables.$bg;
+        color: var(--text-clr-dark);
+        font-size: 1rem;
+        }
+
+        p {
+        color: yellow;
+        font-size: 2rem;
+        }
+
+        main {
+            display:flex;
+            flex-direction: column;
+        }
+
+
+    3. At ./src/styles/_variables.scss
+    add:
+
+        :root {
+            --text-clr-dark: rgb(7, 6, 100);
+        }
+        $bg: rgb(241, 38, 156);
+    
+
+    4. At ./src/index.js
+    add:
+
+    import React from "react";
+    import ReactDOM from "react-dom";
+
+    // import App.js
+    import App from "./App.js";
+
+    // import styles
+    import "./styles/main.scss";
+
+    // mapping the "what and where", as React 17
+    ReactDOM.render(
+        <>
+            <p>with React 17 .render()</p>
+            <App />
+        </>,
+        document.getElementById("root-React17")
+    )
+
+    // mapping the "where and what", as React 18
+    const root18 = ReactDOM.createRoot(document.getElementById("root-React18"));
+    root18.render(
+        <>
+            <p></p>
+            <App />
+        </>
+    )
+
+
+    5. At. ./src/htmltemplates/templateindex.html
+    Verify has this:
+
+    <!DOCTYPE html>
+        <html lang="en">
+            <head>
+                <% for (const tag of htmlWebpackPlugin.tags.headTags) { %><%= tag %>
+                <% } %>
+                <title><%= htmlWebpackPlugin.options.title %></title>
+            </head>
+            <body>
+                <main>
+                    <h1>webpack is operational</h1>
+                    <div id="root-React17"></div>
+                    <div id="root-React18"></div>
+                </main>
+            </body>
+        </html>
+    
+
+    6. At webpack.config.js
+
+    Modify buildMode to
+    buildMode: "production"
+
+
+    7. At the root directory of the project, run:
+        $ npm build run
+
+        Then, when finished, run:
+        $ npm run dev
+
+        Open localhost:8080
+
+
+
+
+
+
+
+
+-------------------------------------------------------
+21. Install dev dependencies: PostCSS (for css injection)
+
+postcss.config.js
+
+
+-------------------------------------------------------
+22.
+
+.browserslistrc
+
+-------------------------------------------------------
+
+
