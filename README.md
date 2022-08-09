@@ -4,7 +4,7 @@ Project Setup for a React webapp, with Webpack & Babel (RWB)
 My current local dev env: WSL2 Debian 11 instance, using Node 18 (18.7) with VSCode.
 
 ### Project abstract
-React (18 (17)) + Webpack + Babel ( + Sass/PostCSS + Astroturf ), instead of using the create-react-app or vite.\
+React (18 (17)) + Webpack 5 + Babel 7 ( + Sass/PostCSS + Astroturf ), instead of using the create-react-app or vite.\
 Aiming to build a dev env for CSS-in-JS with webpack dev server.
 
 ### Concept around Sass Loader Chain
