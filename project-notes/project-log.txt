@@ -9,7 +9,7 @@ This JavaScript build toolchain:
     Module bundler: Webpack
     Compiler: Babel
 
-To use this:
+How to use this project setup:
     1. clone the repo
     2. in terminal, go to that directory
     3. $ npm init (to create the node_modules folder)
@@ -17,6 +17,10 @@ To use this:
     5. at webpack.config.js look for buildMod variable, and set it up to "development" if you want to dev the app, or to "production" if you want webpack to build the css files
     6. $ npm run build
     7. $ npm run dev (will start the live server of Webpack, at localhost:8080)
+
+How to use this large txt:
+    1. clone the repo
+    2. use VSCode fold feature at the pointing down "v" (arrow) character near the section numbers
 
 
 -------------------------------------------------------
@@ -636,10 +640,24 @@ To use this:
         $ npm install --save-dev css-loader
         $ npm install --save-dev sass-loader
 
-    (Or as: npm i -D sass style-loader css-loader sass-loader )
+        style-loader creates `style` nodes from JS strings
+        css-loader translates CSS into CommonJS
+        sass-loader compiles Sass to CSS
+
+        The sass-loader uses Sass's custom importer feature to pass all queries to the Webpack resolving engine. 
+        Thus you can import your Sass modules from /node_modules/
+        example at index,js: @import "bootstrap";
+
+        $ npm install resolve-url-loader --save-dev
+    
+    Since Sass implementations don't provide url rewriting, all linked assets must be relative to the output.
+    Use resolve-url-loader, a webpack loader that resolves relative paths in url() statements based on the original source file.
+    It will allow webpack to find assets with fully relative paths.
+    Place it before sass-loader in the loader chain.
+
 
         The loader flow works from right to left:
-        style-loader <--- css-loader <--- sass-loader
+        style-loader <--- css-loader <--- resolve-url-loader <--- sass-loader
 
         sass-loader loads the sass|scss files.
         css-loader loads the css files.
@@ -659,6 +677,7 @@ To use this:
         MiniCssExtractPlugin
         style-loader
         sass-loader
+        resolve-url-loader
         css-loader
 
 
@@ -666,9 +685,12 @@ To use this:
 19. Configure sass + loaders for a Conditional build for "development" or "production"
 
     Configure:
+    style-loader |  MiniCssExtractPlugin <--- css-loader <--- resolve-url-loader <--- sass-loader
+
         MiniCssExtractPlugin
         style-loader
         sass-loader
+        // resolve-url-loader (leave it for the optimization stage)
         css-loader
 
     When to use each?
@@ -690,7 +712,9 @@ To use this:
         This will enable to build a lot more faster when using the Webpack Dev Server.
     
 
-    Proposed flow: "sass-loader" --> "css-loader" --> either {if mode: "development" use style-loader, if mode: "production" use MiniCssExtractPlugin.loader}
+    Proposed flow: "sass-loader" --> ... --> "css-loader"
+        then:
+        --> either {if mode: "development" use style-loader, if mode: "production" use MiniCssExtractPlugin.loader}
 
 
     Add the loaders and the plugin to your webpack.config.js
@@ -721,10 +745,12 @@ To use this:
                     // regex to grab all files ending with sass, scss and css
                     test: /\.(sa|sc|c)ss$/,
                     use: [
-                        // if true use "style-loader", if false use "MiniCssExtractPlugin.loader"
-                        buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
-                        "css-loader",
-                        "sass-loader",
+                    // if true use "style-loader", if false use "MiniCssExtractPlugin.loader"
+                    buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
+                    "css-loader",
+                    // config the resolve options later ()
+                    // "resolve-url-loader",
+                    "sass-loader",
                     ],
                 },
             ],
@@ -1013,7 +1039,7 @@ To use this:
 
 
 -------------------------------------------------------
-23. Install project dependency: astroturf
+23. Install project dependency: CSS-in-JS: astroturf, postcss-js
 
     Astroturf lets you write CSS in your JavaScript files 
     without adding any runtime layer, 
@@ -1022,6 +1048,13 @@ To use this:
 
     At the root directory:
         $ npm install astroturf
+    
+
+    PostCSS js is for CSS-in-JS and styles in JS objects.
+        $ npm install postcss-js
+
+    PostCSS js will be configured at the webpack.config.js
+    instead of postcss.comfig.js
 
     
 -------------------------------------------------------
@@ -1077,7 +1110,7 @@ To use this:
 
 
 -------------------------------------------------------
-26. Add source maps for debugging at webback.config.js
+26. Add source maps for debugging at webpack.config.js
 
     At module.exports = {}
     add:
@@ -1098,6 +1131,9 @@ To use this:
             clean: true,
         },
 
+
+-------------------------------------------------------
+Optimization
 
 -------------------------------------------------------
 28. Optimization: Install dev dependencies: css-minimizer-webpack-plugin
@@ -1167,4 +1203,208 @@ To use this:
 
 
 -------------------------------------------------------
-30. Webpack build speed: 
+30. Optimization: Finding culprits for the Webpack build speed: 
+
+    Install:
+        $ npm install --save-dev speed-measure-webpack-plugin
+    
+    At webpack.config.js
+
+    const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
+    const smp = new SpeedMeasurePlugin();
+
+    module.exports = smp.wrap({
+        // ...webpack config...
+    });  
+
+
+    Then, 
+    at webpack.config.js
+
+    Initial optimization measures:
+        Added the include path option on rules
+        Added the cache option for HtmlWebpackPlugin
+        Added the cache option for module.exports object
+
+        Note: cache is set to type: 'memory' in development mode and disabled in production mode. 
+        cache: true is an alias to cache: { type: 'memory' }. To disable caching pass false.
+   
+
+    module: {
+        cache: {
+            type: "memory",
+            cacheUnaffected: true,
+            maxGenerations: 1,
+        },
+        ...,
+        rules: [
+            {
+                test: /\.(js|jsx)$/,
+                include: path.resolve(__dirname, "src"),
+                ...
+            },
+            {
+                test: /\.(sa|sc|c)ss$/,
+                include: path.resolve(__dirname, "src/styles"),
+                ...
+            },
+            {
+                test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                include: path.resolve(__dirname, "src/images"),
+                ...
+            },
+        ],
+    },
+
+    ...
+    plugins: [
+        new HtmlWebpackPlugin({
+            // emit only if the file has changed
+            cache: true,
+            ...
+        })
+    ],
+
+
+    --------------------------------------------
+    Running builds to determine the build seconds:
+
+        1. buildMode: "development",
+        $ npm run build
+
+        SpeedMeasurePlugin formatted output:
+
+            General output time took 9.61 secs
+
+            Plugins
+                TerserPlugin took 5.75 secs (why is it running on a development mode? Because minimize: true. Set it to false on dev mode)
+                HtmlWebpackPlugin took 0.162 secs
+                CssMinimizerPlugin took 0.001 secs (why is it running on a development mode? Because minimize: true. Set it to false on dev mode)
+
+            Modules, Loaders
+                css-loader + postcss-loader + sass-loader took 1.97 secs (module count = 1)
+                modules with no loaders took 1.31 secs (module count = 18)
+                
+                babel-loader + astroturf took 1.061 secs (module count = 2)
+                style-loader + css-loader + postcss-loader + sass-loader took 0.036 secs (module count = 1)
+                html-webpack-plugin took 0.035 secs (module count = 1)        
+
+
+        2. buildMode: "production",
+
+        $ npm run build
+        
+        smp.wrap() will break the build when using buildMode: "production"
+        so remove the smp.wrap() when running one.
+        
+        Fails because it cannot parse the .concat(buildMode !== "production" ? [] : [new MiniCssExtractPlugin()]), 
+        (There is a bug somewhere, .concat() is used correctly)
+
+        Without smp.wrap()
+        webpack 5.74.0 compiled successfully in 7687 ms
+
+
+    --------------------------------------------
+        Changed this: 
+
+        optimization: {
+            minimize: true,
+            ...
+        },        
+
+        to
+
+        optimization: {
+            minimize: buildMode !== "production" ? false : true,
+            ...
+        }, 
+
+        Now, buildMode = "development"
+        with module.exports: smp.wrap({});
+        $ npm run build
+
+        SpeedMeasurePlugin: 
+            General output time took 5.52 secs (previous was 9.61 secs)
+            TerserPlugin took 2.94 secs (why is it running with minimize: false ?)
+
+
+        buildMode = "production"
+        webpack 5.74.0 compiled successfully in 7444 ms
+
+
+        ---------------
+        module.exports: smp.wrap({
+            buildMode: "development",
+            ...
+            optimization: {
+                minimize: buildMode !== "production" ? false : true,
+                ...
+            },
+            ...
+        });
+
+        SMP General output time took 3.88 secs
+
+        --------------
+        Culprits:
+            1. TerserPlugin ---> issue solved out of development mode
+            2. Sass loader chain ---> will be reviewed at stage 31
+        
+        Current build times:
+            development: 3.85 secs
+            dev server: 232 ms
+
+            production: 7.48 secs
+        
+
+-------------------------------------------------------
+31. Optimization: Sass Loader Chain 
+
+style-loader |  MiniCssExtractPlugin <--- css-loader <--- resolve-url-loader <--- sass-loader       
+
+module: {
+            rules: [
+                {
+                    //... 
+                },
+                {
+                    test: /\.(sa|sc|c)ss$/,
+                    use: [
+                        buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
+                        {
+                            loader: "css-loader"
+                        },
+                        {
+                            loader: "postcss-loader",
+                            options: {
+                                postcssOptions: {
+                                    parser: "postcss-js",
+                                },
+                                execute: true,
+                            },
+                        },
+                        {
+                            loader: "resolve-url-loader",
+                            options: {
+                                // sourceMap: true,
+                                silent: true,
+                            },
+                        },
+                        {
+                            loader: "sass-loader", 
+                            options: {
+                                // sourceMap is required by resolve-url-loader
+                                sourceMap: true,
+                                // Prefer `dart-sass`
+                                implementation: require("sass"),
+                                sassOptions: {
+                                    // this is a Node 18 webapp setup, and fiber fails on Node over v16
+                                    fiber: false,
+                                }
+                            }
+                        },                        
+                    ],
+                },
+            ],
+        },
+

@@ -24,6 +24,11 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 // import module
 const TerserPlugin = require("terser-webpack-plugin");
 
+// import optimization modules
+const SpeedMeasurePlugin = require("speed-measure-webpack-plugin");
+// when using it    module.exports: smp.wrap({  });
+const smp = new SpeedMeasurePlugin();
+
 // change buildMode to the type of build, manually
 // set mode between "development" | "production" | "none"
 const buildMode = "development";
@@ -34,8 +39,13 @@ const buildMode = "development";
  * ----------------------------------------
  */
 
-module.exports = {
+module.exports = smp.wrap({
     mode: buildMode,
+    cache: {
+        type: "memory",
+        cacheUnaffected: true,
+        maxGenerations: 1,
+    },
     entry: {
         bundle: path.resolve(__dirname, "src/index.js"),
     },
@@ -49,30 +59,61 @@ module.exports = {
         rules: [
             {
                 test: /\.(js|jsx)$/,
+                include: path.resolve(__dirname, "src"),
                 exclude: /node_modules/,
                 use: [
-                    "babel-loader", "astroturf/loader"
+                    { loader: "babel-loader" }, 
+                    { loader: "astroturf/loader" },
                 ],
             },
             {
                 test: /\.(sa|sc|c)ss$/,
+                include: path.resolve(__dirname, "src/styles"),
                 use: [
                     // if true use "style-loader", if false use "MiniCssExtractPlugin.loader"
                     buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
-                    "css-loader",
-                    "postcss-loader",
-                    "sass-loader",
+                    { 
+                        loader: "css-loader" 
+                    },
+                    { 
+                        loader: "postcss-loader",
+                        /* options: { 
+                            postcssOptions: {
+                                parser: "postcss-js",
+                            },
+                            execute: true,
+                        },  */
+                    },
+                    { 
+                        loader: "resolve-url-loader",
+                        options: { 
+                            // sourceMap: true,
+                            silent: true,
+                        },
+                    },
+                    { 
+                        loader: "sass-loader",
+                        options: { 
+                            sourceMap: true,
+                            implementation: require("sass"),
+                            sassOptions: {
+                                fiber: false,
+                            },
+                        }, 
+                    },                    
                 ],
             },
             {
                 test: /\.(png|svg|jpg|jpeg|gif)$/i,
+                include: path.resolve(__dirname, "src/images"),
                 dependency: { not: ['url'] },
                 type: "asset/resource",
             },
         ],
     },
     optimization: {
-        minimize: true, 
+        minimize: buildMode !== "production" ? false : true, 
+        //minimize: false,
         minimizer: [
             new CssMinimizerPlugin(),
             new TerserPlugin({
@@ -87,6 +128,7 @@ module.exports = {
     },
     plugins: [
         new HtmlWebpackPlugin({
+            cache: true,
             inject: false,
             minify: {
                 collapseWhitespace: false,
@@ -121,4 +163,4 @@ module.exports = {
         allowedHosts: ["localhost"],
     },
     target: "web"
-}
+});
