@@ -20,7 +20,7 @@ const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 // change buildMode to the type of build, manually
 // set mode between "development" | "production" | "none"
-const buildMode = "development";
+const buildMode = "production";
 
 
 /* ----------------------------------------
@@ -36,6 +36,7 @@ module.exports = {
     output: {
         path: path.resolve(__dirname, "dist"),
         filename: "[name].js",
+        assetModuleFilename: "images/[name][ext]",
         //filename: "[name][contenthash].js",
         clean: true,
     },
@@ -44,9 +45,9 @@ module.exports = {
             {
                 test: /\.(js|jsx)$/,
                 exclude: /node_modules/,
-                use: {
-                    loader: "babel-loader"
-                }
+                use: [
+                    "babel-loader", "astroturf/loader"
+                ],
             },
             {
                 test: /\.(sa|sc|c)ss$/,
@@ -54,6 +55,7 @@ module.exports = {
                     // if true use "style-loader", if false use "MiniCssExtractPlugin.loader"
                     buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
                     "css-loader",
+                    "postcss-loader",
                     "sass-loader",
                 ],
             },

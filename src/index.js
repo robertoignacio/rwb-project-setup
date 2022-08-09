@@ -1,3 +1,4 @@
+// import in ES6 syntax
 import React from "react";
 import ReactDOM from "react-dom";
 

@@ -1,7 +1,7 @@
 --- Project Setup Notes Log ---
 
 Aims to be a project setup for a 
-React (> 17) + Webpack + Babel ( + Sass/PostCSS)
+React (18 (17)) + Webpack + Babel ( + Sass/PostCSS + Astroturf)
 instead of using the create-react-app or vite
 
 This JavaScript build toolchain:
@@ -751,7 +751,7 @@ To use this:
     @use "global";
     (Note it is imported using @use, without the "_" or the file extension)
 
-
+    -----------------------------------------
     2. At ./src/styles/_global.scss
     add:
 
@@ -773,7 +773,7 @@ To use this:
             flex-direction: column;
         }
 
-
+    -----------------------------------------
     3. At ./src/styles/_variables.scss
     add:
 
@@ -782,10 +782,11 @@ To use this:
         }
         $bg: rgb(241, 38, 156);
     
-
+    -----------------------------------------
     4. At ./src/index.js
     add:
 
+    // import in ES6 syntax
     import React from "react";
     import ReactDOM from "react-dom";
 
@@ -813,9 +814,9 @@ To use this:
         </>
     )
 
-
+    -----------------------------------------
     5. At. ./src/htmltemplates/templateindex.html
-    Verify has this:
+    Verify it has this:
 
     <!DOCTYPE html>
         <html lang="en">
@@ -833,13 +834,13 @@ To use this:
             </body>
         </html>
     
-
+    -----------------------------------------
     6. At webpack.config.js
 
     Modify buildMode to
     buildMode: "production"
 
-
+    -----------------------------------------
     7. At the root directory of the project, run:
         $ npm build run
 
@@ -849,23 +850,231 @@ To use this:
         Open localhost:8080
 
 
-
-
-
-
+    Should be working.
 
 
 -------------------------------------------------------
-21. Install dev dependencies: PostCSS (for css injection)
+21. Install dev dependencies: postcss + postcss-preset-env + postcss-loader
 
-postcss.config.js
+    PostCSS:
+        Is a tool for transforming styles with JS plugins, CSS-in-JS.
+        When paired with Browserslist can inject vendor prefixes to CSS rules 
+        to the supported browsers (like: -webkit-box', '-webkit-flex', '-ms-flexbox', 'flex'),
+        enforce consistent conventions and avoid errors in your stylesheets with stylelint, etc.
+
+    PostCSS Preset Env:
+        Is a PostCSS plugin that lets you convert modern CSS into something most browsers can understand, 
+        determining the polyfills you need based on your targeted browsers or runtime environments.
+    
+    Postcss Loader:
+        Loads postcss files to webpack.
+
+
+    At the root of the project:
+
+    Install PostCSS
+        $ npm install --save-dev postcss
+
+    Install PostCSS preset
+        $ npm install --save-dev postcss-preset-env
+
+    Install PostCSS Loader
+        $ npm install --save-dev postcss-loader
 
 
 -------------------------------------------------------
-22.
+22. Configure PostCSS
 
-.browserslistrc
+    First,
+    at the root dir of the project
+    create the file:
+        $ touch postcss.config.js
+        (create this file, empty)
+
+
+    Add this to it:
+
+    module.exports ={
+        plugins: [
+            "postcss-preset-env"
+        ]
+    }
+
+
+    Second, 
+    at webpack.config.js:
+
+        module.exports = {
+            mode: buildMode,
+            entry: {},
+            output: {},
+            module: {
+                rules: [
+                    {
+                        test: ...
+                    },
+                    {
+                        test: /\.(sa|sc|c)ss$/,
+                        use: [
+                            buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
+                            "css-loader",
+                            "postcss-loader", // add it between sass-loader and css-loader
+                            "sass-loader",
+                        ],
+                    },
+                ],
+            },
+        },
+
 
 -------------------------------------------------------
+22. Create a list of supported web browsers: Browserlist
+
+    Is useful because can be integrated to the flow of PostCSS Autoprefixer
+    to only include css prefixes for the supported targets.
+    (For instance, only include webkit because all iOS browsers use WebKit).
+
+    Babel and PostCSS both read from Browserslist.
+
+    Browserslist will take queries from: 
+    tool option, browserslist config, .browserslistrc config, browserslist section in package.json, environment variables.
 
 
+    First:
+    Verify the installation of browserslist.
+    (It was installed previously as dependency of another module)
+
+        $ npx browserslist --version
+    
+
+    Second,
+    at the root directory, create .browserslistrc
+
+        $ touch .browserslistrc
+    
+
+    Third,
+    write the rules:
+    https://github.com/browserslist/browserslist#full-list
+    (Each line is a rule)
+
+        cover 99.5%
+        since 2015
+        not ie < 11
+        maintained node versions
+    
+
+    Fourth,
+    run npx browserslist in project directory to see what browsers were selected by your queries.
+    (Don’t remove browsers just because you don’t know them)
+
+        $ npx browserslist
+
+    
+    Expected result can be seen with buildMode: "production"
+
+        at _global.scss
+            ...
+            main {
+                display:flex;
+                flex-direction: column;
+            }
+
+        at webpack.config.js
+            ...
+            const buildMode = "production";
+        
+        at root dir, terminal:
+            $ npm run build
+
+        at /dist/out.css
+            ...
+            main {
+                -webkit-box-orient: vertical;
+                -webkit-box-direction: normal;
+                -moz-box-orient: vertical;
+                -moz-box-direction: normal;
+                display: -webkit-box;
+                display: -webkit-flex;
+                display: -moz-box;
+                display: -ms-flexbox;
+                display: flex;
+                -webkit-flex-direction: column;
+                -ms-flex-direction: column;
+                flex-direction: column
+            }
+
+    Note: 
+    Some features of current JavaScript might not get transpiled by Babel to the target browsers, 
+    which will require a manual polyfill.
+
+    @babel/preset-env takes any target environments you've specified and checks them against its mappings 
+    to compile a list of plugins and passes it to Babel.
+
+
+-------------------------------------------------------
+23. Install project dependency: astroturf
+
+    Astroturf lets you write CSS in your JavaScript files 
+    without adding any runtime layer, 
+    and with your existing CSS processing pipeline.
+    CSS-in-JS
+
+    At the root directory:
+        $ npm install astroturf
+
+    
+-------------------------------------------------------
+24. Configure Astroturf
+
+    First,
+    at webpack.config.js
+    (requires postcss-loader)
+
+    module.exports = {
+        module: {
+            rules: [
+                {
+                    test: /\.(js|jsx)$/,
+                    exclude: /node_modules/,
+                    use: [
+                        "babel-loader", "astroturf/loader"
+                    ],
+                },
+                {
+                    test: /\.(sa|sc|c)ss$/,
+                    use: [
+                        buildMode !== "production" ? "style-loader" : MiniCssExtractPlugin.loader,
+                        "css-loader",
+                        "postcss-loader",
+                        "sass-loader",
+                    ],
+                }
+            ]
+        }
+    }
+
+
+    Second,
+    at postcss.config.js
+    add:
+
+        module.exports ={
+            plugins: [
+                "postcss-preset-env",
+                require('autoprefixer'),
+                require('postcss-nested')
+            ]
+        }
+
+
+-------------------------------------------------------
+25. Verify that everything works
+
+    1. buildMode: "production"
+
+    2. $ npm run build
+
+
+-------------------------------------------------------
+26. Might add here routing (TBA)
