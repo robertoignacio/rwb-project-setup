@@ -8,7 +8,7 @@ React (18 (17)) + Webpack 5 + Babel 7 ( + Sass/PostCSS + Astroturf ), instead of
 Aiming to build a dev env for CSS-in-JS with webpack dev server for CI/CD
 
 ### Concept
-Change the value of buildMode to "development" or "production", at webpack.config.js --> module.exports = { mode: buildMode, ... }
+Change the value of buildMode to "development" or "production", at webpack.config.js --> module.exports = { mode: buildMode, ... }\
 (Not using process.env.NODE_ENV)
 - At buildMode: "development" will build with ["style-loader", "css-loader", "postcss-loader", "sass-loader",] (inject the css into the js)\
 - At buildMode: "production" will build with [MiniCssExtractPlugin.loader, "css-loader", "postcss-loader", "sass-loader",] (create the css files)
